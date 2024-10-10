@@ -373,7 +373,11 @@ def run(args):
         else:
             raise NotImplementedError
 
-        server.train()
+        
+        if train_flag:
+            server.train() ## this is the line which train the model (server is the model which is selected via args parse)
+        else :
+            server.unlearn() 
 
         time_list.append(time.time()-start)
 

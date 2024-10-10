@@ -76,6 +76,7 @@ class FedAvg(Server):
 
         self.save_results()
         self.save_global_model()
+   
 
         if self.num_new_clients > 0:
             self.eval_new_clients = True
@@ -83,3 +84,12 @@ class FedAvg(Server):
             print(f"\n-------------Fine tuning round-------------")
             print("\nEvaluate new clients")
             self.evaluate()
+
+
+    def unlern(self):
+        """ Need to put the fed unlearning part here which probably has a similar structure to the above learning part
+        need to copy that code and configure it
+        
+        create a seprate function for the unlearning part here 
+        """
+        pass
