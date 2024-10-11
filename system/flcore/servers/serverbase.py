@@ -92,8 +92,10 @@ class Server(object):
                             send_slow=send_slow)
             self.clients.append(client)
             
-"""so our task is to set unlearn clients such that first 50 are learn clients and the rest are unlearn clients""" 
-    
+            
+            
+            
+        """so our task is to set unlearn clients such that first 50 are learn clients and the rest are unlearn clients""" 
     def set_unlearn_clients(self, clientObj):
         """This is function which set each client and assign data to them """
         for i, train_slow, send_slow in zip(range(self.num_clients), self.train_slow_clients, self.send_slow_clients):

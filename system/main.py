@@ -374,10 +374,10 @@ def run(args):
             raise NotImplementedError
 
         
-        if train_flag:
-            server.train() ## this is the line which train the model (server is the model which is selected via args parse)
+        if args.learn:
+            server.train()  ## this is the line which train the model (server is the model which is selected via args parse)
         else :
-            server.unlearn() 
+            server.unlearn()  ## if unlearning
 
         time_list.append(time.time()-start)
 
@@ -498,6 +498,10 @@ if __name__ == "__main__":
     # FedDBE
     parser.add_argument('-mo', "--momentum", type=float, default=0.1)
     parser.add_argument('-klw', "--kl_weight", type=float, default=0.0)
+    
+    
+    ### unlearning arguments to be mentioned here 
+    parser.add_argument('-learn','--learn_unlearn',type=bool, default=True, help='Learn or Unlearn should be mentioned here by default will learn')
 
 
     args = parser.parse_args()
