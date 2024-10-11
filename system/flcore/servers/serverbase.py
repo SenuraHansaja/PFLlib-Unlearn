@@ -78,6 +78,10 @@ class Server(object):
         self.new_clients = []
         self.eval_new_clients = False
         self.fine_tuning_epoch_new = args.fine_tuning_epoch_new
+        
+        ##unlearning part
+        self.learn_clients_count = args.learn_client_count
+        
 
     def set_clients(self, clientObj):
         """This is function which set each client and assign data to them """
@@ -92,23 +96,35 @@ class Server(object):
                             send_slow=send_slow)
             self.clients.append(client)
             
+    # def set_unlearn_clients(self, clientObj):  ## i think this will be redundant 
+    #     """
+    #     This method sets the initial clients to be active learning clients, 
+    #     and the rest to be unlearn clients. The first 'learn_clients_count' clients
+    #     will be set as learn clients, and the rest will be treated as unlearn clients.
+    #     """
+    #     for i in range(self.num_clients):
+    #         # iterate through learn part
+    #         is_learn_client = i < self.learn_clients_count
             
-            
-            
-        """so our task is to set unlearn clients such that first 50 are learn clients and the rest are unlearn clients""" 
-    def set_unlearn_clients(self, clientObj):
-        """This is function which set each client and assign data to them """
-        for i, train_slow, send_slow in zip(range(self.num_clients), self.train_slow_clients, self.send_slow_clients):
-            train_data = read_client_data(self.dataset, i, is_train=True)
-            test_data = read_client_data(self.dataset, i, is_train=False)
-            client = clientObj(self.args, 
-                            id=i, 
-                            train_samples=len(train_data), 
-                            test_samples=len(test_data), 
-                            train_slow=train_slow, 
-                            send_slow=send_slow)
-            self.clients.append(client)  
+    #         # Assign data to the clients
+    #         train_data = read_client_data(self.dataset, i, is_train=True)
+    #         test_data = read_client_data(self.dataset, i, is_train=False)
 
+    #         client = clientObj(
+    #             self.args,
+    #             id=i,
+    #             train_samples=len(train_data),
+    #             test_samples=len(test_data),
+    #             train_slow=False,  # these were set to false becauase we dont care about them at this moment
+    #             send_slow=False,
+    #             is_learn_client=is_learn_client 
+    #         )
+    #         self.clients.append(client)
+            
+    #         print(f"Total clients set: {self.num_clients}, Learn clients: {self.learn_clients_count}, Unlearn clients: {self.num_clients - self.learn_clients_count}")
+        
+            
+            
     # random select slow clients
     def select_slow_clients(self, slow_rate):
         slow_clients = [False for i in range(self.num_clients)]

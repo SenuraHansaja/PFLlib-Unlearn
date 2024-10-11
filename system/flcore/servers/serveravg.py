@@ -93,7 +93,7 @@ class FedAvg(Server):
         create a seprate function for the unlearning part here 
         
         
-        for client in self.selected_clients:    ## in the unlearn function we need to set the clients to unlearn
+        for client in self.selected_clients:    ## in the unlearn function we need to set the clients to unlearn ---> but when it comes to client unlearn what data we need to specify right ??????
                 client.unlearn()              
         """
         pass
