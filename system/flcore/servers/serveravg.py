@@ -91,5 +91,9 @@ class FedAvg(Server):
         need to copy that code and configure it
         
         create a seprate function for the unlearning part here 
+        
+        
+        for client in self.selected_clients:    ## in the unlearn function we need to set the clients to unlearn
+                client.unlearn()              
         """
         pass

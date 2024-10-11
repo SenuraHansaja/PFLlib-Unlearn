@@ -59,3 +59,9 @@ class clientAVG(Client):
 
         self.train_time_cost['num_rounds'] += 1
         self.train_time_cost['total_cost'] += time.time() - start_time
+
+    def unlearn(self):
+        """ need to define a client unlearn method for the algorithm too 
+        which will be called in the serveravg train loop and initiate the unlearn method
+        therefore we define the unlean method here"""
+        pass

@@ -80,6 +80,7 @@ class Server(object):
         self.fine_tuning_epoch_new = args.fine_tuning_epoch_new
 
     def set_clients(self, clientObj):
+        """This is function which set each client and assign data to them """
         for i, train_slow, send_slow in zip(range(self.num_clients), self.train_slow_clients, self.send_slow_clients):
             train_data = read_client_data(self.dataset, i, is_train=True)
             test_data = read_client_data(self.dataset, i, is_train=False)
@@ -90,6 +91,21 @@ class Server(object):
                             train_slow=train_slow, 
                             send_slow=send_slow)
             self.clients.append(client)
+            
+"""so our task is to set unlearn clients such that first 50 are learn clients and the rest are unlearn clients""" 
+    
+    def set_unlearn_clients(self, clientObj):
+        """This is function which set each client and assign data to them """
+        for i, train_slow, send_slow in zip(range(self.num_clients), self.train_slow_clients, self.send_slow_clients):
+            train_data = read_client_data(self.dataset, i, is_train=True)
+            test_data = read_client_data(self.dataset, i, is_train=False)
+            client = clientObj(self.args, 
+                            id=i, 
+                            train_samples=len(train_data), 
+                            test_samples=len(test_data), 
+                            train_slow=train_slow, 
+                            send_slow=send_slow)
+            self.clients.append(client)  
 
     # random select slow clients
     def select_slow_clients(self, slow_rate):
