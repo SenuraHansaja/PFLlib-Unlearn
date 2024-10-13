@@ -86,13 +86,12 @@ class FedAvg(Server):
             self.evaluate()
 
 
-    def unlern(self):
+    def unlearn(self):
         """ Need to put the fed unlearning part here which probably has a similar structure to the above learning part
         need to copy that code and configure it
         
-        create a seprate function for the unlearning part here 
-        
-        
+        create a separate function for the unlearning part here
+
         for client in self.selected_clients:    ## (Question) in the unlearn function we need to set the clients to unlearn ---> but when it comes to client unlearn what data we need to specify right ??????
                 client.unlearn()              
         """

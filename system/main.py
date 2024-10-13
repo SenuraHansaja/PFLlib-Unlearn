@@ -518,7 +518,7 @@ if __name__ == "__main__":
     if args.device == "cuda" and not torch.cuda.is_available():
         print("\ncuda is not avaiable.\n")
         args.device = "cpu"
-joint
+
     print("=" * 50)
     for arg in vars(args):
         print(arg, '=',getattr(args, arg))
