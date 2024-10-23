@@ -310,7 +310,7 @@ def run(args):
             server = LG_FedAvg(args, i)
 
         elif args.algorithm == "FedGC":
-            args.head = copy.deepcopy(args.model.fc)/home/skydvn/Documents/git/DomainGeneralization/KhanhLe/DomainBed
+            args.head = copy.deepcopy(args.model.fc)
             args.model.fc = nn.Identity()
             args.model = BaseHeadSplit(args.model, args.head)
             server = FedGC(args, i)
@@ -373,16 +373,11 @@ def run(args):
         else:
             raise NotImplementedError
 
-        if args.learn == "learn":
-            server.train()
-            """ must save pre-trained FL models """
-        elif args.learn ==  "unlearn":
-            """ must load pre-trained FL models """
-            server.unlearn()  #
-        else:
-            server.train()
-            """ must save pre-trained FL models """
-            server.unlearn()
+        
+        if args.learn:
+            server.train()  ## this is the line which train the model (server is the model which is selected via args parse)
+        else :
+            server.unlearn()  ## if unlearning
 
         time_list.append(time.time()-start)
 
@@ -507,8 +502,8 @@ if __name__ == "__main__":
     
     ### unlearning arguments to be mentioned here 
     parser.add_argument('-learn','--learn', type=bool, default=True, help='Learn or Unlearn should be mentioned here by default will learn')
-    parser.add_argument('-learn_count', "--learn_client_count", type=int, default=50,help="Number of clients we want to do learn")
-    parser.add_argument('-learn_percentage', "--learn_client_percentage", type=int, default=50,help="Number of clients we want to do learn")
+    parser.add_argument('-learn_count', "--learn_count", type=int, default=50,help="Number of clients we want to do learn")
+    parser.add_argument('-learn_percentage', "--learn_percentage", type=int, default=50,help="Number of clients we want to do learn")
 
 
     args = parser.parse_args()
