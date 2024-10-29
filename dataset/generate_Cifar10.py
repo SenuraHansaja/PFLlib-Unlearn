@@ -52,39 +52,39 @@ def generate_dataset(dir_path, num_clients, niid, balance, partition):
         root=dir_path+"rawdata", train=True, download=True, transform=transform)
     testset = torchvision.datasets.CIFAR10(
         root=dir_path+"rawdata", train=False, download=True, transform=transform)
-    trainloader = torch.utils.data.DataLoader(
-        trainset, batch_size=len(trainset.data), shuffle=False)
-    testloader = torch.utils.data.DataLoader(
-        testset, batch_size=len(testset.data), shuffle=False)
+    # trainloader = torch.utils.data.DataLoader(
+    #     trainset, batch_size=len(trainset.data), shuffle=False)
+    # testloader = torch.utils.data.DataLoader(
+    #     testset, batch_size=len(testset.data), shuffle=False)
 
-    for _, train_data in enumerate(trainloader, 0):
-        trainset.data, trainset.targets = train_data
-    for _, test_data in enumerate(testloader, 0):
-        testset.data, testset.targets = test_data
+    # for _, train_data in enumerate(trainloader, 0):
+    #     trainset.data, trainset.targets = train_data
+    # for _, test_data in enumerate(testloader, 0):
+    #     testset.data, testset.targets = test_data
 
-    dataset_image = []
-    dataset_label = []
+    # dataset_image = []
+    # dataset_label = []
 
-    dataset_image.extend(trainset.data.cpu().detach().numpy())
-    dataset_image.extend(testset.data.cpu().detach().numpy())
-    dataset_label.extend(trainset.targets.cpu().detach().numpy())
-    dataset_label.extend(testset.targets.cpu().detach().numpy())
-    dataset_image = np.array(dataset_image)
-    dataset_label = np.array(dataset_label)
+    # dataset_image.extend(trainset.data.cpu().detach().numpy())
+    # dataset_image.extend(testset.data.cpu().detach().numpy())
+    # dataset_label.extend(trainset.targets.cpu().detach().numpy())
+    # dataset_label.extend(testset.targets.cpu().detach().numpy())
+    # dataset_image = np.array(dataset_image)
+    # dataset_label = np.array(dataset_label)
 
-    num_classes = len(set(dataset_label))
-    print(f'Number of classes: {num_classes}')
+    # num_classes = len(set(dataset_label))
+    # print(f'Number of classes: {num_classes}')
 
-    # dataset = []
-    # for i in range(num_classes):
-    #     idx = dataset_label == i
-    #     dataset.append(dataset_image[idx])
+    # # dataset = []
+    # # for i in range(num_classes):
+    # #     idx = dataset_label == i
+    # #     dataset.append(dataset_image[idx])
 
-    X, y, statistic = separate_data((dataset_image, dataset_label), num_clients, num_classes,  
-                                    niid, balance, partition, class_per_client=2)
-    train_data, test_data = split_data(X, y)
-    save_file(config_path, train_path, test_path, train_data, test_data, num_clients, num_classes, 
-        statistic, niid, balance, partition)
+    # X, y, statistic = separate_data((dataset_image, dataset_label), num_clients, num_classes,  
+    #                                 niid, balance, partition, class_per_client=2)
+    # train_data, test_data = split_data(X, y)
+    # save_file(config_path, train_path, test_path, train_data, test_data, num_clients, num_classes, 
+    #     statistic, niid, balance, partition)
 
 
 if __name__ == "__main__":
