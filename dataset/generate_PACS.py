@@ -9,73 +9,76 @@ import torchvision
 import torchvision.transforms as transforms
 from utils.dataset_utils import check, separate_data, split_data, save_file
 from torchvision.datasets import ImageFolder, DatasetFolder
+from torch.utils.data import DataLoader, Dataset
+from torchvision import datasets
 import tarfile
 from zipfile import ZipFile
 import gdown
+from PIL import Image
+from os import path
 
 
 random.seed(1)
 np.random.seed(1)
 num_clients = 20
 dir_path = "PACS/"
+data_path = "PACS/"
 
 
-
-class ImageFolder_custom(DatasetFolder):
-    def __init__(self, root, dataidxs=None, train=True, transform=None, target_transform=None):
-        self.root = root
-        self.dataidxs = dataidxs
-        self.train = train
-        self.transform = transform
-        self.target_transform = target_transform
-
-        imagefolder_obj = ImageFolder(self.root, self.transform, self.target_transform)
-        self.loader = imagefolder_obj.loader
-        if self.dataidxs is not None:
-            self.samples = np.array(imagefolder_obj.samples)[self.dataidxs]
-        else:
-            self.samples = np.array(imagefolder_obj.samples)
-
+class PACS(Dataset):
+    def __init__(self, data_paths, data_labels, transforms, domain_name):
+        super(PACS, self).__init__()
+        self.data_paths = data_paths
+        self.data_labels = data_labels
+        self.transforms = transforms
+        self.domain_name = domain_name
     def __getitem__(self, index):
-        path = self.samples[index][0]
-        target = self.samples[index][1]
-        target = int(target)
-        sample = self.loader(path)
-        if self.transform is not None:
-            sample = self.transform(sample)
-        if self.target_transform is not None:
-            target = self.target_transform(target)
-
-        return sample, target
-
+        img = Image.open(self.data_paths[index])
+        if not img.mode == "RGB":
+            img = img.convert("RGB")
+        label = self.data_labels[index]
+        img = self.transforms(img)
+        return img, label
     def __len__(self):
-        if self.dataidxs is None:
-            return len(self.samples)
-        else:
-            return len(self.dataidxs)
+        return len(self.data_paths)
+    
+
+def read_domainnet_data(dataset_path, domain_name, split="train"):
+    data_paths = []
+    data_labels = []
+    split_file = path.join(dataset_path, "splits", "{}_{}.txt".format(domain_name, split))
+    with open(split_file, "r") as f:
+        lines = f.readlines()
+        for line in lines:
+            line = line.strip()
+            data_path, label = line.split(' ')
+            data_path = path.join(dataset_path, data_path)
+            label = int(label)
+            data_paths.append(data_path)
+            data_labels.append(label)
+    return data_paths, data_labels
 
 
 
-# def download_and_extract(url, dst, remove=True):
-#     gdown.download(url, dst, quiet=False)
+def get_domainnet_dloader(dataset_path, domain_name):
+    train_data_paths, train_data_labels = read_domainnet_data(dataset_path, domain_name, split="train")
+    test_data_paths, test_data_labels = read_domainnet_data(dataset_path, domain_name, split="test")
+    transforms_train = transforms.Compose([
+        transforms.RandomResizedCrop(64, scale=(0.75, 1)),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor()
+    ])
+    transforms_test = transforms.Compose([
+        transforms.Resize((64, 64)),
+        transforms.ToTensor()
+    ])
+    train_dataset = PACS(train_data_paths, train_data_labels, transforms_train, domain_name)
+    train_loader = DataLoader(dataset=train_dataset, batch_size=len(train_dataset), shuffle=False)
+    test_dataset = PACS(test_data_paths, test_data_labels, transforms_test, domain_name)
+    test_loader = DataLoader(dataset=test_dataset, batch_size=len(test_dataset), shuffle=False)
+    return train_loader, test_loader
 
-#     if dst.endswith(".tar.gz"):
-#         tar = tarfile.open(dst, "r:gz")
-#         tar.extractall(os.path.dirname(dst))
-#         tar.close()
 
-#     if dst.endswith(".tar"):
-#         tar = tarfile.open(dst, "r:")
-#         tar.extractall(os.path.dirname(dst))
-#         tar.close()
-
-#     if dst.endswith(".zip"):
-#         zf = ZipFile(dst, "r")
-#         zf.extractall(os.path.dirname(dst))
-#         zf.close()
-
-#     if remove:
-#         os.remove(dst)
 
 
 def generate_dataset(dir_path, num_clients, niid, balance, partition):
@@ -86,40 +89,54 @@ def generate_dataset(dir_path, num_clients, niid, balance, partition):
     config_path = dir_path + "config.json"
     train_path = dir_path + "train/"
     test_path = dir_path + "test/"
+    if not os.path.exists(train_path):
+        os.makedirs(train_path)
+    if not os.path.exists(test_path):
+        os.makedirs(test_path)
+    root = data_path+"rawdata"
+    
+    domains = ['art_painting', 'cartoon', 'photo', 'sketch']
+    
+    
+    # Get PACS data
+    if not os.path.exists(root):
+        os.makedirs(root)
+        os.system(f'cd {root}')
+        os.system(f'git clone https://github.com/MachineLearning2020/Homework3-PACS.git')
+        os.system(f'mv PACS/ ../')
 
-    if check(config_path, train_path, test_path, num_clients, niid, balance, partition):
-        return
-
-    # Get data -- manually done
     
-    transform = transforms.Compose(
-        [transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
-    
-    trainset = ImageFolder_custom(root=dir_path+'rawdata/PACS/', transform=transform)
-    
-    trainloader = torch.utils.data.DataLoader(
-        trainset, batch_size=len(trainset), shuffle=False)
-    
-    
-    for _, train_data in enumerate(trainloader, 0):
-        trainset.data, trainset.targets = train_data
+    ## the data_loader will split into test and train sets
+    X, y = [], []
+    for d in domains:
+        train_loader, test_loader = get_domainnet_dloader(root, d)
+        for _, tt in enumerate(train_loader):
+            train_data, train_label = tt
+        for _, tt in enumerate(test_loader):
+            test_data, test_label = tt
+        dataset_image = []
+        dataset_label = []
+        dataset_image.extend(train_data.cpu().detach().numpy())
+        dataset_image.extend(test_data.cpu().detach().numpy())
+        dataset_label.extend(train_label.cpu().detach().numpy())
+        dataset_label.extend(test_label.cpu().detach().numpy())
         
-    dataset_image = []
-    dataset_label = []        
-    
-    dataset_image.extend(trainset.data.cpu().detach().numpy())
-    dataset_label.extend(trainset.targets.cpu().detach().numpy())
-    
+        
+        dataset_image = np.array(dataset_image)
+        dataset_label = np.array(dataset_label)
+        
     num_classes = len(set(dataset_label))
     print(f'Number of classes: {num_classes}')
+        
+        
+        
+    X, y, statistic = separate_data((dataset_image, dataset_label), num_clients, num_classes,  
+                                niid, balance, partition, class_per_client=2)
     
-    
-    X, y, statistic = separate_data((dataset_image, dataset_label), num_clients, num_classes, 
-                                    niid, balance, partition, class_per_client=20)
     train_data, test_data = split_data(X, y)
-    save_file(config_path, train_path, test_path, train_data, test_data, num_clients, num_classes, 
-        statistic, niid, balance, partition)
-    
+    save_file(config_path, train_path, test_path, train_data, test_data, num_clients, num_classes,
+                statistic, niid, balance, partition)
+        
 
 
 if __name__ == "__main__":
