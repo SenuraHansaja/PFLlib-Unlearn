@@ -108,6 +108,8 @@ def run(args):
                 args.model = FedAvgCNN(in_features=1, num_classes=args.num_classes, dim=1024).to(args.device)
             elif "Cifar10" in args.dataset:
                 args.model = FedAvgCNN(in_features=3, num_classes=args.num_classes, dim=1600).to(args.device)
+            elif "PACS" in args.dataset:
+                args.model = FedAvgCNN(in_features=3, num_classes=args.num_classes, dim=10816).to(args.device)
             elif "Omniglot" in args.dataset:
                 args.model = FedAvgCNN(in_features=1, num_classes=args.num_classes, dim=33856).to(args.device)
                 # args.model = CifarNet(num_classes=args.num_classes).to(args.device)
@@ -402,8 +404,8 @@ if __name__ == "__main__":
     parser.add_argument('-dev', "--device", type=str, default="cuda",
                         choices=["cpu", "cuda"])
     parser.add_argument('-did', "--device_id", type=str, default="0")
-    parser.add_argument('-data', "--dataset", type=str, default="MNIST")
-    parser.add_argument('-nb', "--num_classes", type=int, default=10)
+    parser.add_argument('-data', "--dataset", type=str, default="PACS")
+    parser.add_argument('-nb', "--num_classes", type=int, default=7)
     parser.add_argument('-m', "--model", type=str, default="CNN")
     parser.add_argument('-lbs', "--batch_size", type=int, default=10)
     parser.add_argument('-lr', "--local_learning_rate", type=float, default=0.005,
