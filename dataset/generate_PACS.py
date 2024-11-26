@@ -7,7 +7,7 @@ import random
 import torch
 import torchvision
 import torchvision.transforms as transforms
-from utils.dataset_utils import check, separate_data, split_data, save_file
+from utils.dataset_utils import check, separate_data, separate_domain_data, split_data, save_file
 from torchvision.datasets import ImageFolder, DatasetFolder
 from torch.utils.data import DataLoader, Dataset
 from torchvision import datasets
@@ -21,7 +21,7 @@ from os import path
 random.seed(1)
 np.random.seed(1)
 num_clients = 20
-dir_path = "PACS/"
+dir_path  = "PACS/"
 data_path = "PACS/"
 
 
@@ -43,7 +43,7 @@ class PACS(Dataset):
         return len(self.data_paths)
     
 
-def read_domainnet_data(dataset_path, domain_name, split="train"):
+def read_pacs_data(dataset_path, domain_name, split="train"):
     data_paths = []
     data_labels = []
     split_file = path.join(dataset_path, "splits", "{}_{}.txt".format(domain_name, split))
@@ -60,9 +60,9 @@ def read_domainnet_data(dataset_path, domain_name, split="train"):
 
 
 
-def get_domainnet_dloader(dataset_path, domain_name):
-    train_data_paths, train_data_labels = read_domainnet_data(dataset_path, domain_name, split="train")
-    test_data_paths, test_data_labels = read_domainnet_data(dataset_path, domain_name, split="test")
+def get_pacs_dloader(dataset_path, domain_name):
+    train_data_paths, train_data_labels = read_pacs_data(dataset_path, domain_name, split="train")
+    test_data_paths, test_data_labels = read_pacs_data(dataset_path, domain_name, split="test")
     transforms_train = transforms.Compose([
         transforms.RandomResizedCrop(64, scale=(0.75, 1)),
         transforms.RandomHorizontalFlip(),
@@ -77,8 +77,6 @@ def get_domainnet_dloader(dataset_path, domain_name):
     test_dataset = PACS(test_data_paths, test_data_labels, transforms_test, domain_name)
     test_loader = DataLoader(dataset=test_dataset, batch_size=len(test_dataset), shuffle=False)
     return train_loader, test_loader
-
-
 
 
 def generate_dataset(dir_path, num_clients, niid, balance, partition):
@@ -108,31 +106,40 @@ def generate_dataset(dir_path, num_clients, niid, balance, partition):
     
     ## the data_loader will split into test and train sets
     X, y = [], []
-    for d in domains:
-        train_loader, test_loader = get_domainnet_dloader(root, d)
+    dataset_image = []
+    dataset_label = []
+    class_unique = []
+    for id, d in enumerate(domains):
+        train_loader, test_loader = get_pacs_dloader(root, d)
         for _, tt in enumerate(train_loader):
             train_data, train_label = tt
         for _, tt in enumerate(test_loader):
             test_data, test_label = tt
-        dataset_image = []
-        dataset_label = []
-        dataset_image.extend(train_data.cpu().detach().numpy())
-        dataset_image.extend(test_data.cpu().detach().numpy())
-        dataset_label.extend(train_label.cpu().detach().numpy())
-        dataset_label.extend(test_label.cpu().detach().numpy())
+        dataset_image_d = []
+        dataset_label_d = []
+        dataset_image_d.extend(train_data.cpu().detach().numpy())
+        dataset_image_d.extend(test_data.cpu().detach().numpy())
+        dataset_label_d.extend(train_label.cpu().detach().numpy())
+        dataset_label_d.extend(test_label.cpu().detach().numpy())
         
         
-        dataset_image = np.array(dataset_image)
-        dataset_label = np.array(dataset_label)
+        dataset_image_d = np.array(dataset_image_d)
+        dataset_label_d = np.array(dataset_label_d)
+        dataset_image.append(dataset_image_d)
+        dataset_label.append(dataset_label_d)
+        print(f"domain {id}: {len(dataset_label_d)}")
+
+        class_unique.extend(set(dataset_label[id]))
         
-    num_classes = len(set(dataset_label))
+ 
+    num_classes = len(set(class_unique))
     print(f'Number of classes: {num_classes}')
-        
-        
-        
-    X, y, statistic = separate_data((dataset_image, dataset_label), num_clients, num_classes,  
-                                niid, balance, partition, class_per_client=2)
-    
+    #
+    # X, y, statistic = separate_data((dataset_image, dataset_label), num_clients, num_classes,
+    #                             niid, balance, partition, class_per_client=2)
+    X, y, statistic = separate_domain_data((dataset_image, dataset_label), num_clients, num_classes, 4,
+                                            niid, balance, partition, class_per_client=2)
+
     train_data, test_data = split_data(X, y)
     save_file(config_path, train_path, test_path, train_data, test_data, num_clients, num_classes,
                 statistic, niid, balance, partition)
