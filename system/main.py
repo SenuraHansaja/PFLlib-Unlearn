@@ -95,7 +95,7 @@ def run(args):
         start = time.time()
 
         # Generate args.model
-        if model_str == "mlr": # convex
+        if model_str == "MLR": # convex
             if "MNIST" in args.dataset:
                 args.model = Mclr_Logistic(1*28*28, num_classes=args.num_classes).to(args.device)
             elif "Cifar10" in args.dataset:
@@ -108,8 +108,6 @@ def run(args):
                 args.model = FedAvgCNN(in_features=1, num_classes=args.num_classes, dim=1024).to(args.device)
             elif "Cifar10" in args.dataset:
                 args.model = FedAvgCNN(in_features=3, num_classes=args.num_classes, dim=1600).to(args.device)
-            elif "PACS" in args.dataset:
-                args.model = FedAvgCNN(in_features=3, num_classes=args.num_classes, dim=10816).to(args.device)
             elif "Omniglot" in args.dataset:
                 args.model = FedAvgCNN(in_features=1, num_classes=args.num_classes, dim=33856).to(args.device)
                 # args.model = CifarNet(num_classes=args.num_classes).to(args.device)
@@ -375,11 +373,7 @@ def run(args):
         else:
             raise NotImplementedError
 
-        
-        if args.learn:
-            server.train()  ## this is the line which train the model (server is the model which is selected via args parse)
-        else :
-            server.unlearn()  ## if unlearning
+        server.train()
 
         time_list.append(time.time()-start)
 
@@ -404,8 +398,8 @@ if __name__ == "__main__":
     parser.add_argument('-dev', "--device", type=str, default="cuda",
                         choices=["cpu", "cuda"])
     parser.add_argument('-did', "--device_id", type=str, default="0")
-    parser.add_argument('-data', "--dataset", type=str, default="PACS")
-    parser.add_argument('-nb', "--num_classes", type=int, default=7)
+    parser.add_argument('-data', "--dataset", type=str, default="MNIST")
+    parser.add_argument('-ncl', "--num_classes", type=int, default=10)
     parser.add_argument('-m', "--model", type=str, default="CNN")
     parser.add_argument('-lbs', "--batch_size", type=int, default=10)
     parser.add_argument('-lr', "--local_learning_rate", type=float, default=0.005,
@@ -501,8 +495,6 @@ if __name__ == "__main__":
     parser.add_argument('-mo', "--momentum", type=float, default=0.1)
     parser.add_argument('-klw', "--kl_weight", type=float, default=0.0)
     
-    
-    ### unlearning arguments to be mentioned here 
     parser.add_argument('-learn','--learn', type=bool, default=True, help='Learn or Unlearn should be mentioned here by default will learn')
     parser.add_argument('-learn_count', "--learn_count", type=int, default=50,help="Number of clients we want to do learn")
     parser.add_argument('-learn_percentage', "--learn_percentage", type=int, default=50,help="Number of clients we want to do learn")
